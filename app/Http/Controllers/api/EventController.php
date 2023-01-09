@@ -48,6 +48,7 @@ class EventController extends Controller
 
         if ($form["type"] == "withdraw") {
             $id = $form["origin"];
+
             try {
                 Events::findOrFail($id);
 
@@ -69,16 +70,23 @@ class EventController extends Controller
         if ($form["type"] = "transfer") {
             $id = $form["origin"];
             $toId = $form["destination"];
+            $newAccount = [
+                'id' => $toId,
+                'balance' => 0,
+            ];
+
             try {
+              
+                Events::destroy(200);
                 Events::findOrFail($id);
-                Events::findOrFail($toId);
+                Events::create($newAccount);
 
                 $return = $this->update($form, $id);
-                return response()->json([
+                return response()->json(
                     $return
-                ], Response::HTTP_CREATED);
+                , Response::HTTP_CREATED);
             } catch (Exception $exception) {
-
+                
                 return response()->json(
                     0
                 , Response::HTTP_NOT_FOUND);
@@ -107,7 +115,7 @@ class EventController extends Controller
 
             $toAccountId = $request["destination"];
 
-            $account = Events::find($toAccountId);
+            $account = Events::findOrFail($toAccountId);
             $beforeAmount = $account->balance;
 
             $toAccountAmount = $newAmount + $beforeAmount;
@@ -119,7 +127,7 @@ class EventController extends Controller
         }
         if ($request["type"] == "transfer") {
             $fromAccountId = $request["origin"];
-
+            
             Events::where('id', $fromAccountId)->update(['balance' => $fromAccountAmount]);
             Events::where('id', $toAccountId)->update(['balance' => $toAccountAmount]);
 

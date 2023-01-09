@@ -12,6 +12,11 @@ class events extends Model
         'balance'
     ];
 
+    protected $casts = [
+        'balance' => 'integer',
+        'id' => 'string'
+    ];
+    
     public $timestamps = false;
 
 }
