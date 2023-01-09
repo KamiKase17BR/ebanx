@@ -15,7 +15,7 @@ class CreateEventsTable extends Migration
     {
         Schema::create('events', function (Blueprint $table) {
             $table->string("id")->unique();
-            $table->decimal("amount");
+            $table->decimal("balance", 5, 0);
         });
     }
 

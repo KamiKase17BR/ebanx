@@ -22,14 +22,13 @@ class BalanceController extends Controller
         try{
             $account = Events::where('id',$id)->get();
 
-            return response()->json([
-                $account[0]->amount
-            ], Response::HTTP_OK);
+            return $account[0]->balance;
+            
         }catch(Exception $exception){
             
-            return response()->json([
+            return response()->json(
                 0
-            ], Response::HTTP_NOT_FOUND);
+            , Response::HTTP_NOT_FOUND);
         }
 
        

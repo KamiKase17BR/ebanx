@@ -9,7 +9,7 @@ class events extends Model
     
     protected $fillable = [
         'id',
-        'amount'
+        'balance'
     ];
 
     public $timestamps = false;

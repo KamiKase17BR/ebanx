@@ -16,25 +16,30 @@ class EventController extends Controller
     public function store(Request $request)
     {
         $form = json_decode($request->getContent(), true);
-        
-        if ($form["type"] == "deposit") {
-            $id = $form["id"];
-            try {
-                $account = Events::find($id);
 
-                if (!empty($account)) {
+        if ($form["type"] == "deposit") {
+            
+            $id = $form["destination"] ;
+            
+            $account["id"] = $id;
+            $account["balance"] = $form["amount"];
+            
+            try {
+                $searchAccount = Events::find($id);
+
+                if (!empty($searchAccount)) {
                     $return = $this->update($form, $id);
                 }
-
-                if (empty($account)) {
-                    $return = Events::create($form);
+                
+                if (empty($searchAccount)) {
+                    Events::create($account);
+                    $return = Events::find($id);
                 }
 
                 return response()->json([
-                    "destination" => $return
+                    "destination" =>  $return
                 ], Response::HTTP_CREATED);
             } catch (QueryException $exception) {
-
                 return response()->json([
                     0
                 ], Response::HTTP_NOT_FOUND);
@@ -42,21 +47,22 @@ class EventController extends Controller
         }
 
         if ($form["type"] == "withdraw") {
-
-            $id = $form["id"];
+            $id = $form["origin"];
             try {
                 Events::findOrFail($id);
 
                 $return = $this->update($form, $id);
 
-                return response()->json([
+                $return = array("origin" => $return);
+                
+                return response()->json(
                     $return
-                ], Response::HTTP_CREATED);
+                , Response::HTTP_CREATED);
             } catch (Exception $exception) {
 
-                return response()->json([
+                return response()->json(
                     0
-                ], Response::HTTP_NOT_FOUND);
+                , Response::HTTP_NOT_FOUND);
             }
         }
 
@@ -73,9 +79,9 @@ class EventController extends Controller
                 ], Response::HTTP_CREATED);
             } catch (Exception $exception) {
 
-                return response()->json([
+                return response()->json(
                     0
-                ], Response::HTTP_NOT_FOUND);
+                , Response::HTTP_NOT_FOUND);
             }
         }
     }
@@ -87,7 +93,7 @@ class EventController extends Controller
         
         $newAmount = $request["amount"];
         
-        $beforeAmount = $account->amount;
+        $beforeAmount = $account->balance;
 
         if ($request["type"] == "withdraw") {
             $afterAmount =  $beforeAmount - $newAmount;
@@ -102,20 +108,20 @@ class EventController extends Controller
             $toAccountId = $request["destination"];
 
             $account = Events::find($toAccountId);
-            $beforeAmount = $account->amount;
+            $beforeAmount = $account->balance;
 
             $toAccountAmount = $newAmount + $beforeAmount;
         }
 
         if ($request["type"] == "withdraw" || $request["type"] == "deposit") {
-            $account = Events::where('id', $id)->update(['amount' => $afterAmount]);
+            $account = Events::where('id', $id)->update(['balance' => $afterAmount]);
             $account = Events::find($id);
         }
         if ($request["type"] == "transfer") {
             $fromAccountId = $request["origin"];
 
-            Events::where('id', $fromAccountId)->update(['amount' => $fromAccountAmount]);
-            Events::where('id', $toAccountId)->update(['amount' => $toAccountAmount]);
+            Events::where('id', $fromAccountId)->update(['balance' => $fromAccountAmount]);
+            Events::where('id', $toAccountId)->update(['balance' => $toAccountAmount]);
 
             $fromReturn = ["origin" => Events::find($fromAccountId)];
             $toReturn = ["destination" => Events::find($toAccountId)];

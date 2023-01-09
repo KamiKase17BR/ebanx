@@ -14,7 +14,7 @@ class ResetController extends Controller
     public function index()
     {
         Events::truncate();
-
+        return "OK";
     }
 
     
